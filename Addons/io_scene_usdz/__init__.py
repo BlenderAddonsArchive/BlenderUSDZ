@@ -25,6 +25,7 @@ from bpy.props import (
 from bpy_extras.io_utils import (
   ImportHelper,
   ExportHelper,
+  poll_file_object_drop,
 )
 from bpy.types import (
   Operator,
@@ -34,7 +35,7 @@ from bpy.types import (
 class ImportUSDZ(bpy.types.Operator, ImportHelper):
   """Import a USDZ File"""
 
-  bl_idname = "import.usdz"
+  bl_idname = "import_scene.usdz"
   bl_label = "Import USDZ File"
   bl_options = {'PRESET', 'UNDO'}
 
@@ -54,46 +55,31 @@ class ImportUSDZ(bpy.types.Operator, ImportHelper):
     description="Import Animations",
     default=True,
   )
+  
+  def draw(self, context):
+    layout = self.layout
+    layout.use_property_split = True
+    layout.use_property_decorate = False  # No animation.
+    import_panel_include(layout, self)
 
   def execute(self, context):
     from . import import_usdz
     keywords = self.as_keywords(ignore=("filter_glob",))
     return import_usdz.import_usdz(context, **keywords)
 
-  def draw(self, context):
-    pass
 
-
-class USDZ_PT_import_include(bpy.types.Panel):
-  bl_space_type = 'FILE_BROWSER'
-  bl_region_type = 'TOOL_PROPS'
-  bl_label = "Include"
-  bl_parent_id = "FILE_PT_operator"
-
-  @classmethod
-  def poll(cls, context):
-    sfile = context.space_data
-    operator = sfile.active_operator
-    return operator.bl_idname == "IMPORT_OT_usdz"
-
-  def draw(self, context):
-    layout = self.layout
-    layout.use_property_split = True
-    layout.use_property_decorate = False
-
-    sfile = context.space_data
-    operator = sfile.active_operator
-
-    col = layout.column(heading="Import")
-
-    col.prop(operator, 'materials')
-    col.prop(operator, 'animations')
+def import_panel_include(layout, operator):
+  header, body = layout.panel("USDZ_import_include", default_closed=False)
+  header.label(text="Include")
+  if body:
+    body.prop(operator, 'materials')
+    body.prop(operator, 'animations')
 
 
 class ExportUSDZ(bpy.types.Operator, ExportHelper):
   """Save a USDZ File"""
 
-  bl_idname = "export.usdz"
+  bl_idname = "export_scene.usdz"
   bl_label = "Export USDZ File"
   bl_options = {'PRESET'}
 
@@ -147,6 +133,16 @@ class ExportUSDZ(bpy.types.Operator, ExportHelper):
     description="Use Apple's Converter Tool to create the Usdz file",
     default=False,
   )
+  
+  def draw(self, context):
+    layout = self.layout
+    layout.use_property_split = True
+    layout.use_property_decorate = False  # No animation.
+
+    # Are we inside the File browser
+    #is_file_browser = context.space_data.type == 'FILE_BROWSER'
+    export_panel_include(layout, self)
+    export_panel_textures(layout, self)
 
   def execute(self, context):
     from . import export_usdz
@@ -158,69 +154,40 @@ class ExportUSDZ(bpy.types.Operator, ExportHelper):
                                         ))
     return export_usdz.export_usdz(context, **keywords)
 
-  def draw(self, context):
-      pass
+
+def export_panel_include(layout, operator):
+  header, body = layout.panel("USDZ_export_include", default_closed=False)
+  header.label(text="Include")
+  if body:
+    body.prop(operator, 'exportMaterials')
+    body.prop(operator, 'exportAnimations')
+    body.prop(operator, 'globalScale')
+
+def export_panel_textures(layout, operator):
+  header, body = layout.panel("USDZ_export_textures", default_closed=False)
+  header.label(text="Textures")
+  if body:
+    body.prop(operator, 'bakeTextures')
+    body.prop(operator, 'bakeAO')
+    body.separator()
+    body.prop(operator, 'bakeTextureSize')
+    body.prop(operator, 'bakeAOSamples')
 
 
-class USDZ_PT_export_include(bpy.types.Panel):
-  bl_space_type = 'FILE_BROWSER'
-  bl_region_type = 'TOOL_PROPS'
-  bl_label = "Include"
-  bl_parent_id = "FILE_PT_operator"
-
-  @classmethod
-  def poll(cls, context):
-    sfile = context.space_data
-    operator = sfile.active_operator
-    return operator.bl_idname == "EXPORT_OT_usdz"
-
-  def draw(self, context):
-    layout = self.layout
-    layout.use_property_split = True
-    layout.use_property_decorate = False
-
-    sfile = context.space_data
-    operator = sfile.active_operator
-
-    col = layout.column(heading="Export")
-    col.prop(operator, 'exportMaterials')
-    col.prop(operator, 'exportAnimations')
-    layout.prop(operator, 'globalScale')
-
-
-class USDZ_PT_export_textures(bpy.types.Panel):
-  bl_space_type = 'FILE_BROWSER'
-  bl_region_type = 'TOOL_PROPS'
-  bl_label = "Textures"
-  bl_parent_id = "FILE_PT_operator"
+class IO_FH_usdz(bpy.types.FileHandler):
+  bl_idname = "IO_FH_usdz"
+  bl_label = "USDZ"
+  bl_import_operator = "import_scene.usdz"
+  bl_export_operator = "export_scene.usdz"
+  bl_file_extensions = ".usdz"
 
   @classmethod
-  def poll(cls, context):
-    sfile = context.space_data
-    operator = sfile.active_operator
-    return operator.bl_idname == "EXPORT_OT_usdz"
-
-  def draw(self, context):
-    layout = self.layout
-    layout.use_property_split = True
-    layout.use_property_decorate = False
-
-    sfile = context.space_data
-    operator = sfile.active_operator
-
-    col = layout.column(heading="Bake")
-    col.prop(operator, 'bakeTextures')
-    col.prop(operator, 'bakeAO')
-
-    layout.separator()
-
-    layout.prop(operator, 'bakeTextureSize')
-    layout.prop(operator, 'bakeAOSamples')
+  def poll_drop(cls, context):
+    return poll_file_object_drop(context)
 
 
 def menu_func_usdz_import(self, context):
   self.layout.operator(ImportUSDZ.bl_idname, text="USDZ (.usdz)")
-
 
 def menu_func_usdz_export(self, context):
   self.layout.operator(ExportUSDZ.bl_idname, text="USDZ (.usdz)")
@@ -228,12 +195,9 @@ def menu_func_usdz_export(self, context):
 
 classes = (
   ImportUSDZ,
-  USDZ_PT_import_include,
   ExportUSDZ,
-  USDZ_PT_export_include,
-  USDZ_PT_export_textures,
+  IO_FH_usdz,
 )
-
 
 def register():
   for cls in classes:
@@ -241,7 +205,6 @@ def register():
 
   bpy.types.TOPBAR_MT_file_import.append(menu_func_usdz_import)
   bpy.types.TOPBAR_MT_file_export.append(menu_func_usdz_export)
-
 
 def unregister():
   bpy.types.TOPBAR_MT_file_import.remove(menu_func_usdz_import)
