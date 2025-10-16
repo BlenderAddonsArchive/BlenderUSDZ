@@ -88,6 +88,11 @@ class ExportUSDZ(bpy.types.Operator, ExportHelper):
     default="*.usdz;*.usda;*.usdc",
     options={'HIDDEN'},
   )
+  collection: StringProperty(
+    name="Source Collection",
+    description="Export only objects from this collection (and its children)",
+    default="",
+  )
   exportMaterials: BoolProperty(
     name="Materials",
     description="Export Materials from Objects",

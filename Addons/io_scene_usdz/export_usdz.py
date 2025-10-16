@@ -15,7 +15,7 @@ from io_scene_usdz.scene_data import *
 from io_scene_usdz.value_types import *
 from io_scene_usdz.crate_file import *
 
-def export_usdz(context, filepath = '', exportMaterials = True,
+def export_usdz(context, filepath = '', collection="", exportMaterials = True,
                 bakeTextures = False, bakeTextureSize = 1024, bakeAO = False,
                 bakeAOSamples = 64, exportAnimations = False,
                 globalScale = 1.0, useConverter = False,
@@ -26,10 +26,12 @@ def export_usdz(context, filepath = '', exportMaterials = True,
     fileType = fileParts[1] if len(fileParts) > 1 else 'usdz'
     filePath = exportDir + '/' + fileName + '.' + fileType
     tempDir = None
+    
     if not fileType in ('usda', 'usdc'):
         tempDir = tempfile.mkdtemp()
         exportDir = tempDir
     usdData, texturePaths = exportUsdData(context = context,
+                                          collection = collection,
                                           exportMaterials = exportMaterials,
                                           exportDir = exportDir,
                                           bakeTextures = bakeTextures,
@@ -59,7 +61,7 @@ def export_usdz(context, filepath = '', exportMaterials = True,
     return {'FINISHED'}
 
 
-def exportUsdData(context, exportMaterials, exportDir, bakeTextures,
+def exportUsdData(context, collection, exportMaterials, exportDir, bakeTextures,
                   bakeTextureSize, bakeAO, bakeAOSamples, exportAnimations,
                   globalScale):
     scene = Scene()
@@ -71,7 +73,7 @@ def exportUsdData(context, exportMaterials, exportDir, bakeTextures,
     scene.bakeSamples = bakeAOSamples
     scene.animated = exportAnimations
     scene.scale = globalScale
-    scene.loadContext(context)
+    scene.loadContext(context, collection)
     # Export image files
     if scene.bakeTextures:
         scene.exportBakedTextures()

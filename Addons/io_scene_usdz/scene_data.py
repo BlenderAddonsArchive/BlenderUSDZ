@@ -824,15 +824,24 @@ class Scene:
         self.objMap = {}
 
 
-    def loadContext(self, context):
+    def loadContext(self, context, collection):
         if context == None:
             context = bpy.context
         bpy.ops.object.mode_set(mode='OBJECT')
         self.context = context
-        if len(context.selected_objects) > 0:
-            self.bpyObjects = context.selected_objects.copy()
+        
+        local_collection = None
+        if collection:
+          local_collection = bpy.data.collections.get((collection, None))
+        
+        if local_collection:
+            self.bpyObjects = list(local_collection.objects)
         else:
-            self.bpyObjects = context.visible_objects.copy()
+            if len(context.selected_objects) > 0:
+                self.bpyObjects = context.selected_objects.copy()
+            else:
+                self.bpyObjects = context.visible_objects.copy()
+        
         self.bpyActive = context.view_layer.objects.active
         self.startFrame = context.scene.frame_start
         self.endFrame = context.scene.frame_end
