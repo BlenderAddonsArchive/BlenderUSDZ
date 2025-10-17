@@ -774,6 +774,13 @@ class Object:
             child.exportInstanced(usdObj)
 
 
+def getCollectionObjects(collection):
+    objects = set(collection.objects)
+    for child in collection.children:
+        objects = objects.union(getCollectionObjects(child))
+    return objects
+
+
 class Scene:
     """Container for Objects"""
 
@@ -787,6 +794,7 @@ class Scene:
         self.usdCollections = {}
         self.bpyObjects = []
         self.bpyActive = None
+        self.bpySelected = []
         self.exportMaterials = False
         self.materials = {}
         self.exportPath = ''
@@ -809,7 +817,7 @@ class Scene:
     def cleanup(self):
         self.clearObjects()
         deselectBpyObjects()
-        selectBpyObjects(self.bpyObjects)
+        selectBpyObjects(self.bpySelected)
         setBpyActiveObject(self.bpyActive)
         for collection in self.hiddenCollections:
             setBpyCollectionVisibility(collection, False)
@@ -835,14 +843,15 @@ class Scene:
           local_collection = bpy.data.collections.get((collection, None))
         
         if local_collection:
-            self.bpyObjects = list(local_collection.objects)
+            self.bpyObjects = list(getCollectionObjects(local_collection))
         else:
             if len(context.selected_objects) > 0:
-                self.bpyObjects = context.selected_objects.copy()
+                self.bpyObjects = list(context.selected_objects)
             else:
-                self.bpyObjects = context.visible_objects.copy()
+                self.bpyObjects = list(context.visible_objects)
         
         self.bpyActive = context.view_layer.objects.active
+        self.bpySelected = list(bpy.context.view_layer.objects.selected)
         self.startFrame = context.scene.frame_start
         self.endFrame = context.scene.frame_end
         self.curFrame = context.scene.frame_current
