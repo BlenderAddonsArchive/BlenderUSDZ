@@ -120,6 +120,11 @@ class ExportUSDZ(bpy.types.Operator, ExportHelper):
     max=1000,
     default= 64,
   )
+  useGpu: BoolProperty(
+    name="Use GPU Compute",
+    description="Use Cycles GPU Compute for baking textures",
+    default=True,
+  )
   bakeTextureSize: IntProperty(
     name="Image Size",
     description="Default Size of any Baked Images",
@@ -174,6 +179,7 @@ def export_panel_textures(layout, operator):
   if body:
     body.prop(operator, 'bakeTextures')
     body.prop(operator, 'bakeAO')
+    body.prop(operator, 'useGpu')
     body.separator()
     body.prop(operator, 'bakeTextureSize')
     body.prop(operator, 'bakeAOSamples')

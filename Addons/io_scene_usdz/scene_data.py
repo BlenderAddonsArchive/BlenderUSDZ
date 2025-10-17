@@ -810,6 +810,7 @@ class Scene:
         self.endFrame = 0
         self.curFrame = 0
         self.fps = 30
+        self.device = 'GPU'
         self.customLayerData = {'creator':'Blender USDZ Plugin'}
         self.collection = None
 
@@ -955,7 +956,9 @@ class Scene:
     def exportBakedTextures(self):
         # Set the Render Engine to Cycles and set Samples
         renderEngine = self.context.scene.render.engine
+        renderDevice = self.context.scene.cycles.device
         self.context.scene.render.engine = 'CYCLES'
+        self.context.scene.cycles.device = self.device
         samples = self.context.scene.cycles.samples
         self.context.scene.cycles.samples = self.bakeSamples
         # Bake textures for each Object
@@ -964,6 +967,7 @@ class Scene:
                 obj.bakeTextures()
         # Restore the previous Render Engine and Samples
         self.context.scene.cycles.samples = samples
+        self.context.scene.cycles.device = renderDevice
         self.context.scene.render.engine = renderEngine
 
 

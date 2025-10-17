@@ -15,9 +15,9 @@ from io_scene_usdz.scene_data import *
 from io_scene_usdz.value_types import *
 from io_scene_usdz.crate_file import *
 
-def export_usdz(context, filepath = '', collection="", exportMaterials = True,
+def export_usdz(context, filepath = '', collection= '', exportMaterials = True,
                 bakeTextures = False, bakeTextureSize = 1024, bakeAO = False,
-                bakeAOSamples = 64, exportAnimations = False,
+                bakeAOSamples = 64, useGpu = True, exportAnimations = False,
                 globalScale = 1.0, useConverter = False,
                 ):
     exportDir, fileName = os.path.split(filepath)
@@ -38,6 +38,7 @@ def export_usdz(context, filepath = '', collection="", exportMaterials = True,
                                           bakeTextureSize = bakeTextureSize,
                                           bakeAO = bakeAO,
                                           bakeAOSamples = bakeAOSamples,
+                                          useGpu = useGpu,
                                           exportAnimations = exportAnimations,
                                           globalScale = globalScale)
     if fileType == 'usda':
@@ -62,7 +63,7 @@ def export_usdz(context, filepath = '', collection="", exportMaterials = True,
 
 
 def exportUsdData(context, collection, exportMaterials, exportDir, bakeTextures,
-                  bakeTextureSize, bakeAO, bakeAOSamples, exportAnimations,
+                  bakeTextureSize, bakeAO, bakeAOSamples, useGpu, exportAnimations,
                   globalScale):
     scene = Scene()
     scene.exportMaterials = exportMaterials
@@ -71,6 +72,7 @@ def exportUsdData(context, collection, exportMaterials, exportDir, bakeTextures,
     scene.bakeSize = bakeTextureSize
     scene.bakeAO = bakeAO
     scene.bakeSamples = bakeAOSamples
+    scene.device = 'GPU' if useGpu else 'CPU'
     scene.animated = exportAnimations
     scene.scale = globalScale
     scene.loadContext(context, collection)
