@@ -175,13 +175,15 @@ def export_panel_include(layout, operator):
 
 def export_panel_textures(layout, operator):
   header, body = layout.panel("USDZ_export_textures", default_closed=False)
-  header.label(text="Textures")
+  header.use_property_split = False
+  header.prop(operator, "bakeTextures", text="")
+  header.label(text="Bake Textures")
   if body:
-    body.prop(operator, 'bakeTextures')
-    body.prop(operator, 'bakeAO')
+    body.enabled = operator.bakeTextures
     body.prop(operator, 'useGpu')
-    body.separator()
     body.prop(operator, 'bakeTextureSize')
+    body.separator()
+    body.prop(operator, 'bakeAO')
     body.prop(operator, 'bakeAOSamples')
 
 
