@@ -15,9 +15,9 @@ from io_scene_usdz.scene_data import *
 from io_scene_usdz.value_types import *
 from io_scene_usdz.crate_file import *
 
-def export_usdz(context, filepath = '', exportMaterials = True,
+def export_usdz(context, filepath = '', collection= '', exportMaterials = True,
                 bakeTextures = False, bakeTextureSize = 1024, bakeAO = False,
-                bakeAOSamples = 64, exportAnimations = False,
+                bakeAOSamples = 64, useGpu = True, exportAnimations = False,
                 globalScale = 1.0, useConverter = False,
                 ):
     exportDir, fileName = os.path.split(filepath)
@@ -26,16 +26,19 @@ def export_usdz(context, filepath = '', exportMaterials = True,
     fileType = fileParts[1] if len(fileParts) > 1 else 'usdz'
     filePath = exportDir + '/' + fileName + '.' + fileType
     tempDir = None
+    
     if not fileType in ('usda', 'usdc'):
         tempDir = tempfile.mkdtemp()
         exportDir = tempDir
     usdData, texturePaths = exportUsdData(context = context,
+                                          collection = collection,
                                           exportMaterials = exportMaterials,
                                           exportDir = exportDir,
                                           bakeTextures = bakeTextures,
                                           bakeTextureSize = bakeTextureSize,
                                           bakeAO = bakeAO,
                                           bakeAOSamples = bakeAOSamples,
+                                          useGpu = useGpu,
                                           exportAnimations = exportAnimations,
                                           globalScale = globalScale)
     if fileType == 'usda':
@@ -59,8 +62,8 @@ def export_usdz(context, filepath = '', exportMaterials = True,
     return {'FINISHED'}
 
 
-def exportUsdData(context, exportMaterials, exportDir, bakeTextures,
-                  bakeTextureSize, bakeAO, bakeAOSamples, exportAnimations,
+def exportUsdData(context, collection, exportMaterials, exportDir, bakeTextures,
+                  bakeTextureSize, bakeAO, bakeAOSamples, useGpu, exportAnimations,
                   globalScale):
     scene = Scene()
     scene.exportMaterials = exportMaterials
@@ -69,9 +72,10 @@ def exportUsdData(context, exportMaterials, exportDir, bakeTextures,
     scene.bakeSize = bakeTextureSize
     scene.bakeAO = bakeAO
     scene.bakeSamples = bakeAOSamples
+    scene.device = 'GPU' if useGpu else 'CPU'
     scene.animated = exportAnimations
     scene.scale = globalScale
-    scene.loadContext(context)
+    scene.loadContext(context, collection)
     # Export image files
     if scene.bakeTextures:
         scene.exportBakedTextures()

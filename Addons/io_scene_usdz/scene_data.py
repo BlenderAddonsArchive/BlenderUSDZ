@@ -774,6 +774,13 @@ class Object:
             child.exportInstanced(usdObj)
 
 
+def getCollectionObjects(collection):
+    objects = set(collection.objects)
+    for child in collection.children:
+        objects = objects.union(getCollectionObjects(child))
+    return objects
+
+
 class Scene:
     """Container for Objects"""
 
@@ -787,6 +794,7 @@ class Scene:
         self.usdCollections = {}
         self.bpyObjects = []
         self.bpyActive = None
+        self.bpySelected = []
         self.exportMaterials = False
         self.materials = {}
         self.exportPath = ''
@@ -802,6 +810,7 @@ class Scene:
         self.endFrame = 0
         self.curFrame = 0
         self.fps = 30
+        self.device = 'GPU'
         self.customLayerData = {'creator':'Blender USDZ Plugin'}
         self.collection = None
 
@@ -809,7 +818,7 @@ class Scene:
     def cleanup(self):
         self.clearObjects()
         deselectBpyObjects()
-        selectBpyObjects(self.bpyObjects)
+        selectBpyObjects(self.bpySelected)
         setBpyActiveObject(self.bpyActive)
         for collection in self.hiddenCollections:
             setBpyCollectionVisibility(collection, False)
@@ -824,16 +833,26 @@ class Scene:
         self.objMap = {}
 
 
-    def loadContext(self, context):
+    def loadContext(self, context, collection):
         if context == None:
             context = bpy.context
         bpy.ops.object.mode_set(mode='OBJECT')
         self.context = context
-        if len(context.selected_objects) > 0:
-            self.bpyObjects = context.selected_objects.copy()
+        
+        local_collection = None
+        if collection:
+          local_collection = bpy.data.collections.get((collection, None))
+        
+        if local_collection:
+            self.bpyObjects = list(getCollectionObjects(local_collection))
         else:
-            self.bpyObjects = context.visible_objects.copy()
+            if len(context.selected_objects) > 0:
+                self.bpyObjects = list(context.selected_objects)
+            else:
+                self.bpyObjects = list(context.visible_objects)
+        
         self.bpyActive = context.view_layer.objects.active
+        self.bpySelected = list(bpy.context.view_layer.objects.selected)
         self.startFrame = context.scene.frame_start
         self.endFrame = context.scene.frame_end
         self.curFrame = context.scene.frame_current
@@ -937,7 +956,9 @@ class Scene:
     def exportBakedTextures(self):
         # Set the Render Engine to Cycles and set Samples
         renderEngine = self.context.scene.render.engine
+        renderDevice = self.context.scene.cycles.device
         self.context.scene.render.engine = 'CYCLES'
+        self.context.scene.cycles.device = self.device
         samples = self.context.scene.cycles.samples
         self.context.scene.cycles.samples = self.bakeSamples
         # Bake textures for each Object
@@ -946,6 +967,7 @@ class Scene:
                 obj.bakeTextures()
         # Restore the previous Render Engine and Samples
         self.context.scene.cycles.samples = samples
+        self.context.scene.cycles.device = renderDevice
         self.context.scene.render.engine = renderEngine
 
 

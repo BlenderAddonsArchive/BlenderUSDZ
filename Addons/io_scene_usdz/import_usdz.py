@@ -516,7 +516,7 @@ def setShaderInputValue(data, inputData, inputName):
 
 def getTextureMappingNode(data, usdTexture):
     stData = usdTexture['inputs:st'].value.parent
-    uvMap = stData['inputs:varname'].value
+    uvMap = '' #stData['inputs:varname'].value
     if not type(uvMap) is str:
         uvMap = uvMap.value
     if uvMap in data['uvMapNodes']:
