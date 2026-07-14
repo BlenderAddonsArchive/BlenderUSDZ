@@ -551,7 +551,7 @@ def getImageTextureNode(data, usdTexture):
 def connectTextureToValueInput(data, texNode, input):
     texNode.image.colorspace_settings.name = 'Non-Color'
     # Add a Seperate Color Node
-    sepNode = data['material'].node_tree.nodes.new('ShaderNodeSeparateRGB')
+    sepNode = data['material'].node_tree.nodes.new('ShaderNodeSeparateColor')
     sepNode.location.y = texNode.location.y
     sepNode.location.x = -250.0
     # Link in new Node

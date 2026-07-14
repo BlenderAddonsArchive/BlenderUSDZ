@@ -149,7 +149,7 @@ class Material:
         if output != None:
             nodes = self.material.node_tree.nodes
             links = self.material.node_tree.links
-            convertNode = nodes.new('ShaderNodeCombineRGB')
+            convertNode = nodes.new('ShaderNodeCombineColor')
             links.new(convertNode.inputs[0], output)
             links.new(convertNode.inputs[1], output)
             links.new(convertNode.inputs[2], output)
@@ -438,15 +438,16 @@ class Object:
 
 
     def cleanup(self):
+        if  self.object != None:
+            self.object.hide_render = self.hidden
         if self.mesh != None:
             self.mesh.cleanup()
             self.mesn = None
         self.materials = []
-        self.object.hide_render = self.hidden
 
 
     def hasParent(self):
-        parent = self.object.parent
+        parent = self.object.parent if self.object != None else None
         return parent != None and parent.type != 'ARMATURE'
 
 

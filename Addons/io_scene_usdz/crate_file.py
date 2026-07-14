@@ -430,6 +430,8 @@ class CrateFile:
             return self.addFieldVariability(field, value)
         if vType == ValueType.Dictionary:
             return self.addFieldDictionary(field, value)
+        if vType == ValueType.Invalid:
+            return self.addFieldInt(field, 0)
         #print('type: ', vType.name, value)
         return self.addFieldItem(field, vType, False, True, False, value)
 

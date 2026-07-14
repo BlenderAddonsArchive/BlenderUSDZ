@@ -123,7 +123,7 @@ class ExportUSDZ(bpy.types.Operator, ExportHelper):
   useGpu: BoolProperty(
     name="Use GPU Compute",
     description="Use Cycles GPU Compute for baking textures",
-    default=True,
+    default=False,
   )
   bakeTextureSize: IntProperty(
     name="Image Size",
